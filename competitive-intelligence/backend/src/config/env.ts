@@ -16,7 +16,11 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16, 'JWT_REFRESH_SECRET must be at least 16 characters'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
-  FRONTEND_URL: z.string().min(1).default('http://localhost:3000'),
+  FRONTEND_URL: z
+    .string()
+    .min(1)
+    .default('http://localhost:3000')
+    .transform((value) => value.split(',').map((url) => url.trim()).filter(Boolean)),
 
   // Phase 2 — News & Mentions
   SERPAPI_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),

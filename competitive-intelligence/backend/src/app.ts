@@ -11,10 +11,18 @@ import apiRoutes from './routes';
 export function createApp(): Express {
   const app = express();
 
+  app.set('trust proxy', 1);
+
   app.use(helmet());
   app.use(
     cors({
-      origin: env.FRONTEND_URL,
+      origin: (origin, callback) => {
+        if (!origin || env.FRONTEND_URL.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error(`Origin ${origin} is not allowed by CORS`));
+        }
+      },
       credentials: true,
     })
   );
