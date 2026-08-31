@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env';
+import { isOriginAllowed } from './utils/cors';
 import { apiRateLimiter } from './middleware/rateLimit.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
 import { notFoundMiddleware } from './middleware/notFound.middleware';
@@ -16,12 +17,11 @@ export function createApp(): Express {
   app.use(helmet());
   app.use(
     cors({
+      // Passing `false` rather than an Error omits the CORS headers, which is
+      // what the browser blocks on. Returning an Error instead surfaced a 500
+      // through the error middleware and echoed the origin back in the body.
       origin: (origin, callback) => {
-        if (!origin || env.FRONTEND_URL.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(new Error(`Origin ${origin} is not allowed by CORS`));
-        }
+        callback(null, !origin || isOriginAllowed(origin, env.FRONTEND_URL));
       },
       credentials: true,
     })
