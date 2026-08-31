@@ -3,15 +3,24 @@ import { env } from './env';
 
 mongoose.set('strictQuery', true);
 
+let connectPromise: Promise<typeof mongoose> | null = null;
+
 export async function connectDB(): Promise<void> {
-  try {
-    await mongoose.connect(env.MONGODB_URI);
-    console.log('MongoDB connected');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    process.exit(1);
+  if (mongoose.connection.readyState === 1) {
+    return;
   }
+  if (!connectPromise) {
+    connectPromise = mongoose.connect(env.MONGODB_URI).catch((error) => {
+      connectPromise = null;
+      throw error;
+    });
+  }
+  await connectPromise;
 }
+
+mongoose.connection.on('connected', () => {
+  console.log('MongoDB connected');
+});
 
 mongoose.connection.on('disconnected', () => {
   console.warn('MongoDB disconnected');
