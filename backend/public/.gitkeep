@@ -1,0 +1,7 @@
+Intentionally empty.
+
+Vercel serves `outputDirectory` from the filesystem *before* applying the
+rewrite to /api/index, so pointing it at "." published the entire backend —
+src/*.ts, dist/*.js, sourcemaps and tsconfig.json — as public static assets.
+Keeping it at an empty directory means every request falls through to the
+serverless function instead.

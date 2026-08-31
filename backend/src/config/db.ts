@@ -10,10 +10,22 @@ export async function connectDB(): Promise<void> {
     return;
   }
   if (!connectPromise) {
-    connectPromise = mongoose.connect(env.MONGODB_URI).catch((error) => {
-      connectPromise = null;
-      throw error;
-    });
+    connectPromise = mongoose
+      .connect(env.MONGODB_URI, {
+        // Every serverless instance opens its own pool, so a large per-instance
+        // pool multiplies into Atlas connection-limit errors under load.
+        maxPoolSize: 10,
+        minPoolSize: 0,
+        // Without this, queries issued before the handshake completes queue
+        // indefinitely and the request burns its whole timeout with no error.
+        bufferCommands: false,
+        serverSelectionTimeoutMS: 10_000,
+        socketTimeoutMS: 45_000,
+      })
+      .catch((error) => {
+        connectPromise = null;
+        throw error;
+      });
   }
   await connectPromise;
 }
